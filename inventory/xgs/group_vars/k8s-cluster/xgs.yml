@@ -1,0 +1,11 @@
+image_arch: "amd64"
+
+kube_apiserver_enable_admission_plugins: ["PodNodeSelector","NodeRestriction"]
+
+kube_kubeadm_apiserver_extra_args: {"admission-control-config-file": "/etc/kubernetes/admission-control.yaml"}
+
+apiserver_extra_volumes:
+  - name: admission
+    hostPath: /etc/kubernetes/admission-control.yaml
+    mountPath: /etc/kubernetes/admission-control.yaml
+    readOnly: true

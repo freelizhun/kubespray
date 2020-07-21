@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+spec:
+  type: NodePort 
+  ports:
+    - name: http
+      nodePort: 30003
+      port: 80
+      targetPort: 80
+      protocol: TCP
+    - name: https
+      nodePort: 30004
+      port: 443
+      targetPort: 443
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+
+##采用NodePort形式暴露对外ingress-nginx-controller服务。实际上ingress.yaml中指定的backend.serviceName与backend.servicePort
+##以及spec.tls.hosts共同构成了要对外暴露的服务如https://keycloak.com:30003。通过域名keycloak.com与k8s集群的keycloak service
+##服务(serviceName+servicePort)绑定,而这些信息则被ingress-nginx-controller添加到其容器的nginx.conf中用作反向代理到k8s集群的keycloak服务，
+##从而访问https://keycloak.com:30003就访问到了k8s集群中的keycloak服务
+---

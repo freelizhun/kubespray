@@ -1,0 +1,13 @@
+---
+- name: "Check_certs | check if all certs have already been generated on first master"
+  find:
+    paths: "{{ etcd_cert_dir }}"
+    patterns: "ca.pem,node*.pem"
+    get_checksum: true
+  delegate_to: "{{ groups['etcd'][0] }}"
+  register: etcdcert_master
+  run_once: true
+
+- name: "what is the etcdcert_master is"
+  debug:
+    msg: "{{ etcdcert_master.files|map(attribute='path')|list|sort }}"
