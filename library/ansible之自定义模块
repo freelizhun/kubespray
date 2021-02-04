@@ -1,0 +1,39 @@
+# github.com/freelizhun/kubespray/library/kube.py文件解释
+# 可以参考https://docs.ansible.com/ansible/latest/dev_guide/developing_module_utilities.html
+# 该文件是对ansible中的模块一个扩展，即扩展为kube模块，类似ansible自带的template模块，该kube模块的应用可以参考
+# kubespray/roles/kubernetes-apps/ansible/tasks/dashboard.yml文件
+
+[root@master1 kubespray]# ansible --version
+ansible 2.7.8
+  config file = /home/lz/xgs-kubespray/kubespray/ansible.cfg
+  configured module search path = [u'/home/lz/xgs-kubespray/kubespray/library']  #即ansible搜索用户自己编写好的模块的路径
+  ansible python module location = /usr/local/lib/python2.7/dist-packages/ansible
+  executable location = /usr/local/bin/ansible
+  python version = 2.7.16 (default, Jul  9 2020, 06:35:45) [GCC 7.3.0]
+  
+
+[root@master1 kubespray]# ls library/
+kube.py
+
+[root@master1 kubespray]# cat roles/kubernetes-apps/ansible/tasks/dashboard.yml 
+---
+- name: Kubernetes Apps | Lay down dashboard template
+  template:
+    src: "{{ item.file }}.j2"
+    dest: "{{ kube_config_dir }}/{{ item.file }}"
+  with_items:
+    - { file: dashboard-ns.yml, type: ns, name: kubernetes-dashboard-ns }
+    - { file: dashboard.yml, type: deploy, name: kubernetes-dashboard }
+  register: manifests
+  when: inventory_hostname == groups['kube-master'][0]
+
+- name: Kubernetes Apps | Start dashboard
+  kube:
+    name: "{{ item.item.name }}"
+    namespace: "kubernetes-dashboard"
+    kubectl: "{{ bin_dir }}/kubectl"
+    resource: "{{ item.item.type }}"
+    filename: "{{ kube_config_dir }}/{{ item.item.file }}"
+    state: "latest"
+  with_items: "{{ manifests.results }}"
+  when: inventory_hostname == groups['kube-master'][0]
